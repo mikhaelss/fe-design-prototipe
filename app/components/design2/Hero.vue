@@ -1,20 +1,53 @@
 <script setup lang="ts">
-// Images for the diagonal grid
-const gridImages = [
-  { id: 1, image: 'https://picsum.photos/seed/music1/500/350' },
-  { id: 2, image: 'https://picsum.photos/seed/music2/500/350' },
-  { id: 3, image: 'https://picsum.photos/seed/artist1/500/350' },
-  { id: 4, image: 'https://picsum.photos/seed/music3/500/350' },
-  { id: 5, image: 'https://picsum.photos/seed/sound1/500/350' },
-  { id: 6, image: 'https://picsum.photos/seed/music4/500/350' },
-  { id: 7, image: 'https://picsum.photos/seed/beats1/500/350' },
-  { id: 8, image: 'https://picsum.photos/seed/music5/500/350' },
+// Images for the diagonal grid - all same height, different widths/orientations
+// Types: portrait (tall), square (1:1), landscape (wide), stacked (2 images)
+const gridItems = [
+  { id: 1, type: 'portrait', image: 'https://picsum.photos/seed/music1/300/500' },
+  { id: 2, type: 'square', image: 'https://picsum.photos/seed/music2/400/400' },
+  {
+    id: 3,
+    type: 'stacked',
+    images: [
+      'https://picsum.photos/seed/music3a/300/245',
+      'https://picsum.photos/seed/music3b/300/245'
+    ]
+  },
+  { id: 4, type: 'landscape', image: 'https://picsum.photos/seed/music4/600/400' },
+  { id: 5, type: 'portrait', image: 'https://picsum.photos/seed/music5/300/500' },
+  { id: 6, type: 'square', image: 'https://picsum.photos/seed/music6/400/400' },
+  {
+    id: 7,
+    type: 'stacked',
+    images: [
+      'https://picsum.photos/seed/music7a/300/245',
+      'https://picsum.photos/seed/music7b/300/245'
+    ]
+  },
+  { id: 8, type: 'landscape', image: 'https://picsum.photos/seed/music8/600/400' },
+  { id: 9, type: 'portrait', image: 'https://picsum.photos/seed/music9/300/500' },
+  { id: 10, type: 'square', image: 'https://picsum.photos/seed/music10/400/400' },
 ]
 
-// Create rows with enough duplicates for seamless infinite scroll
-const row1 = [...gridImages, ...gridImages, ...gridImages, ...gridImages]
-const row2 = [...gridImages.slice(3), ...gridImages.slice(0, 3), ...gridImages.slice(3), ...gridImages.slice(0, 3), ...gridImages.slice(3), ...gridImages.slice(0, 3), ...gridImages]
-const row3 = [...gridImages.slice(5), ...gridImages.slice(0, 5), ...gridImages.slice(5), ...gridImages.slice(0, 5), ...gridImages.slice(5), ...gridImages.slice(0, 5), ...gridImages]
+// Create rows with duplicates for seamless scroll
+const row1 = [...gridItems, ...gridItems, ...gridItems]
+const row2 = [...gridItems.slice(5), ...gridItems.slice(0, 5), ...gridItems.slice(5), ...gridItems.slice(0, 5), ...gridItems]
+const row3 = [...gridItems.slice(3), ...gridItems.slice(0, 3), ...gridItems.slice(3), ...gridItems.slice(0, 3), ...gridItems]
+
+// Get width class based on type (all same height)
+const getWidthClass = (type: string) => {
+  switch (type) {
+    case 'portrait':
+      return 'w-44 md:w-52 lg:w-60'
+    case 'square':
+      return 'w-56 md:w-64 lg:w-72'
+    case 'landscape':
+      return 'w-72 md:w-80 lg:w-96'
+    case 'stacked':
+      return 'w-44 md:w-52 lg:w-60'
+    default:
+      return 'w-44 md:w-52 lg:w-60'
+  }
+}
 </script>
 
 <template>
@@ -24,68 +57,154 @@ const row3 = [...gridImages.slice(5), ...gridImages.slice(0, 5), ...gridImages.s
       <!-- Rotated container for diagonal effect -->
       <div class="diagonal-grid absolute -inset-[50%] w-[200%] h-[200%] flex flex-col justify-center -rotate-12 origin-center">
         <!-- Row 1 -->
-        <div class="marquee-row flex gap-4 mb-4">
-          <div class="marquee-content flex gap-4 animate-scroll-right">
-            <div
-              v-for="(img, index) in row1"
-              :key="`r1-${index}`"
-              class="flex-shrink-0 w-64 h-44 md:w-80 md:h-56 lg:w-96 lg:h-64 rounded-xl overflow-hidden shadow-lg"
-            >
-              <img :src="img.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
-            </div>
+        <div class="marquee-row flex items-end gap-3 md:gap-4 mb-3 md:mb-4">
+          <div class="marquee-content flex items-end gap-3 md:gap-4 animate-scroll-right">
+            <template v-for="(item, index) in row1" :key="`r1-${index}`">
+              <!-- Single image (portrait, square, landscape) -->
+              <div
+                v-if="item.type !== 'stacked'"
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 overflow-hidden shadow-lg"
+                :class="getWidthClass(item.type)"
+              >
+                <img :src="item.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
+              </div>
+              <!-- Stacked images -->
+              <div
+                v-else
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 flex flex-col gap-2"
+                :class="getWidthClass(item.type)"
+              >
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[0]" :alt="`Image ${index}-1`" class="w-full h-full object-cover" />
+                </div>
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[1]" :alt="`Image ${index}-2`" class="w-full h-full object-cover" />
+                </div>
+              </div>
+            </template>
           </div>
-          <div class="marquee-content flex gap-4 animate-scroll-right" aria-hidden="true">
-            <div
-              v-for="(img, index) in row1"
-              :key="`r1-dup-${index}`"
-              class="flex-shrink-0 w-64 h-44 md:w-80 md:h-56 lg:w-96 lg:h-64 rounded-xl overflow-hidden shadow-lg"
-            >
-              <img :src="img.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
-            </div>
+          <div class="marquee-content flex items-end gap-3 md:gap-4 animate-scroll-right" aria-hidden="true">
+            <template v-for="(item, index) in row1" :key="`r1-dup-${index}`">
+              <div
+                v-if="item.type !== 'stacked'"
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 overflow-hidden shadow-lg"
+                :class="getWidthClass(item.type)"
+              >
+                <img :src="item.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
+              </div>
+              <div
+                v-else
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 flex flex-col gap-2"
+                :class="getWidthClass(item.type)"
+              >
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[0]" :alt="`Image ${index}-1`" class="w-full h-full object-cover" />
+                </div>
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[1]" :alt="`Image ${index}-2`" class="w-full h-full object-cover" />
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
         <!-- Row 2 -->
-        <div class="marquee-row flex gap-4 mb-4">
-          <div class="marquee-content flex gap-4 animate-scroll-left">
-            <div
-              v-for="(img, index) in row2"
-              :key="`r2-${index}`"
-              class="flex-shrink-0 w-64 h-44 md:w-80 md:h-56 lg:w-96 lg:h-64 rounded-xl overflow-hidden shadow-lg"
-            >
-              <img :src="img.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
-            </div>
+        <div class="marquee-row flex items-end gap-3 md:gap-4 mb-3 md:mb-4">
+          <div class="marquee-content flex items-end gap-3 md:gap-4 animate-scroll-left">
+            <template v-for="(item, index) in row2" :key="`r2-${index}`">
+              <div
+                v-if="item.type !== 'stacked'"
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 overflow-hidden shadow-lg"
+                :class="getWidthClass(item.type)"
+              >
+                <img :src="item.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
+              </div>
+              <div
+                v-else
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 flex flex-col gap-2"
+                :class="getWidthClass(item.type)"
+              >
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[0]" :alt="`Image ${index}-1`" class="w-full h-full object-cover" />
+                </div>
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[1]" :alt="`Image ${index}-2`" class="w-full h-full object-cover" />
+                </div>
+              </div>
+            </template>
           </div>
-          <div class="marquee-content flex gap-4 animate-scroll-left" aria-hidden="true">
-            <div
-              v-for="(img, index) in row2"
-              :key="`r2-dup-${index}`"
-              class="flex-shrink-0 w-64 h-44 md:w-80 md:h-56 lg:w-96 lg:h-64 rounded-xl overflow-hidden shadow-lg"
-            >
-              <img :src="img.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
-            </div>
+          <div class="marquee-content flex items-end gap-3 md:gap-4 animate-scroll-left" aria-hidden="true">
+            <template v-for="(item, index) in row2" :key="`r2-dup-${index}`">
+              <div
+                v-if="item.type !== 'stacked'"
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 overflow-hidden shadow-lg"
+                :class="getWidthClass(item.type)"
+              >
+                <img :src="item.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
+              </div>
+              <div
+                v-else
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 flex flex-col gap-2"
+                :class="getWidthClass(item.type)"
+              >
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[0]" :alt="`Image ${index}-1`" class="w-full h-full object-cover" />
+                </div>
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[1]" :alt="`Image ${index}-2`" class="w-full h-full object-cover" />
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
         <!-- Row 3 -->
-        <div class="marquee-row flex gap-4">
-          <div class="marquee-content flex gap-4 animate-scroll-right-slow">
-            <div
-              v-for="(img, index) in row3"
-              :key="`r3-${index}`"
-              class="flex-shrink-0 w-64 h-44 md:w-80 md:h-56 lg:w-96 lg:h-64 rounded-xl overflow-hidden shadow-lg"
-            >
-              <img :src="img.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
-            </div>
+        <div class="marquee-row flex items-end gap-3 md:gap-4">
+          <div class="marquee-content flex items-end gap-3 md:gap-4 animate-scroll-right-slow">
+            <template v-for="(item, index) in row3" :key="`r3-${index}`">
+              <div
+                v-if="item.type !== 'stacked'"
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 overflow-hidden shadow-lg"
+                :class="getWidthClass(item.type)"
+              >
+                <img :src="item.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
+              </div>
+              <div
+                v-else
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 flex flex-col gap-2"
+                :class="getWidthClass(item.type)"
+              >
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[0]" :alt="`Image ${index}-1`" class="w-full h-full object-cover" />
+                </div>
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[1]" :alt="`Image ${index}-2`" class="w-full h-full object-cover" />
+                </div>
+              </div>
+            </template>
           </div>
-          <div class="marquee-content flex gap-4 animate-scroll-right-slow" aria-hidden="true">
-            <div
-              v-for="(img, index) in row3"
-              :key="`r3-dup-${index}`"
-              class="flex-shrink-0 w-64 h-44 md:w-80 md:h-56 lg:w-96 lg:h-64 rounded-xl overflow-hidden shadow-lg"
-            >
-              <img :src="img.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
-            </div>
+          <div class="marquee-content flex items-end gap-3 md:gap-4 animate-scroll-right-slow" aria-hidden="true">
+            <template v-for="(item, index) in row3" :key="`r3-dup-${index}`">
+              <div
+                v-if="item.type !== 'stacked'"
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 overflow-hidden shadow-lg"
+                :class="getWidthClass(item.type)"
+              >
+                <img :src="item.image" :alt="`Image ${index}`" class="w-full h-full object-cover" />
+              </div>
+              <div
+                v-else
+                class="flex-shrink-0 h-64 md:h-72 lg:h-80 flex flex-col gap-2"
+                :class="getWidthClass(item.type)"
+              >
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[0]" :alt="`Image ${index}-1`" class="w-full h-full object-cover" />
+                </div>
+                <div class="flex-1 overflow-hidden">
+                  <img :src="item.images?.[1]" :alt="`Image ${index}-2`" class="w-full h-full object-cover" />
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -108,13 +227,13 @@ const row3 = [...gridImages.slice(5), ...gridImages.slice(0, 5), ...gridImages.s
         <div class="flex gap-4">
           <NuxtLink
             to="/2/roster"
-            class="bg-black text-white px-8 py-4 font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors rounded-md"
+            class="bg-black text-white px-8 py-4 font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors"
           >
             View Roster
           </NuxtLink>
           <NuxtLink
             to="#about"
-            class="border-2 border-black text-black px-8 py-4 font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors rounded-md"
+            class="border-2 border-black text-black px-8 py-4 font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-colors"
           >
             Learn More
           </NuxtLink>
